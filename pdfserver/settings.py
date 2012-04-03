@@ -5,7 +5,7 @@ package_path = os.path.dirname(__file__)
 DATABASE = 'sqlite:///%s' % os.path.join(package_path, '..', 'pdfserver.db')
 DEBUG = False
 SECRET_KEY = None
-UPLOAD_TO = os.path.join(package_path, '..', 'uploads')
+UPLOAD_TO = os.path.join(package_path,  'uploads')
 # MAX_CONTENT_LENGTH = 10485760 # sets maximum upload size to 10 MB
 MODELS = 'pdfserver.models'
 
