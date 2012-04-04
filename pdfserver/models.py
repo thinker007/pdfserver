@@ -12,10 +12,11 @@ from pdfserver import app
 class Upload(object):
     query = db_session.query_property()
 
-    def __init__(self, localpath=None, filename=None, page_count=None):
+    def __init__(self, localpath=None, filename=None, page_count=None,file_size=None):
         self.localpath = localpath
         self.filename = filename
         self.page_count = page_count
+        self.file_size = file_size
 
     def __repr__(self):
         return '<Upload %r, %r>' % (self.filename, self.file_path)
@@ -50,7 +51,8 @@ class Upload(object):
         f, self.localpath = tempfile.mkstemp(dir=app.config['UPLOAD_TO'])
         app.logger.debug("Storing upload to %s" % self.file_path)
         file.save(self.file_path)
-
+        self.file_size = os.path.getsize(self.file_path)
+        app.logger.debug("File size is %s" % self.file_size)
         # save pdf page count
         try:
             f = self.get_file()
@@ -76,10 +78,10 @@ class Upload(object):
     def file_path(self):
         return os.path.join(app.config['UPLOAD_TO'], self.localpath)
 
-    @property
-    def size(self):
-        if self.localpath:
-            return os.path.getsize(self.file_path)
+    # @property
+    # def size(self):
+        # if self.localpath:
+            # return os.path.getsize(self.file_path)
 
 
 class DeleteFileExtension(MapperExtension):
@@ -92,6 +94,7 @@ uploads = Table('uploads', metadata,
     Column('localpath', String(255), unique=True),
     Column('filename', String(255)),
     Column('page_count', Integer),
+    Column('file_size',Integer),
     # Use AUTOINCREMENT for sqlite3 to yield globally unique ids
     #   -> new ids cannot take on ids of deleted items, security issue!
     sqlite_autoincrement=True,
