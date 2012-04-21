@@ -115,6 +115,7 @@ def upload_file():
 
     if 'file' in request.files and request.files['file']:
         app.logger.info("Upload form is valid")
+        app.logger.info("request.files is %s" % request.files)
         upload = Upload()
 
         # save original name

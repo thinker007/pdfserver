@@ -12,12 +12,13 @@ from pdfserver import app
 class Upload(object):
     query = db_session.query_property()
 
-    def __init__(self, localpath=None, filename=None, page_count=None,file_size=None):
+    def __init__(self, localpath=None, filename=None, page_count=None,file_size=None,page_width=None,page_height=None):
         self.localpath = localpath
         self.filename = filename
         self.page_count = page_count
         self.file_size = file_size
-
+        self.page_width = page_width
+        self.page_height = page_height
     def __repr__(self):
         return '<Upload %r, %r>' % (self.filename, self.file_path)
 
@@ -55,15 +56,19 @@ class Upload(object):
         app.logger.debug("File size is %s" % self.file_size)
         # save pdf page count
         try:
-            f = self.get_file()
+           # f = self.get_file()
             from pyPdf import PdfFileReader
-            pdf_obj = PdfFileReader(f)
+            pdf_obj = PdfFileReader(file)
             self.page_count = pdf_obj.getNumPages()
+            self.page_width = pdf_obj.getPage(0).mediaBox.getWidth()
+            self.page_height = pdf_obj.getPage(0).mediaBox.getHeight()
+            app.logger.info("get page_size: %d,%d" % (self.page_width,self.page_height))
             app.logger.debug("Read %d pages" % self.page_count)
-            f.close()
+           # f.close()
         except Exception, e:
+            print Exception,e
             pass
-
+        
     def get_file(self):
         path = self.file_path
         if not path:
@@ -95,6 +100,8 @@ uploads = Table('uploads', metadata,
     Column('filename', String(255)),
     Column('page_count', Integer),
     Column('file_size',Integer),
+    Column('page_width',Integer),
+    Column('page_height',Integer),
     # Use AUTOINCREMENT for sqlite3 to yield globally unique ids
     #   -> new ids cannot take on ids of deleted items, security issue!
     sqlite_autoincrement=True,
