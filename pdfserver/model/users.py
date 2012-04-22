@@ -17,7 +17,7 @@ from flask import abort, current_app
 from sqlalchemy import BaseQuery
 from flaskext.principal import RoleNeed, UserNeed, Permission
 
-from sqlalchemy import Table, Column, Integer, String
+from sqlalchemy import Table, Column, Integer, String,DateTime,Boolean
 from sqlalchemy.orm import mapper
 from sqlalchemy.orm.interfaces import MapperExtension
 from sqlalchemy.orm.exc import NoResultFound
@@ -74,31 +74,11 @@ class UserQuery(BaseQuery):
         return user
 
 
-class User(db.Model):
-
-    __tablename__ = 'users'
-    
-    query_class = UserQuery
-
-    PER_PAGE = 50
-    TWEET_PER_PAGE = 30
-    
+class User(object):
+    query = db_session.query_property()
     MEMBER = 100
     MODERATOR = 200
     ADMIN = 300
-    
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unique=True)
-    nickname = db.Column(db.String(20))
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    _password = db.Column("password", db.String(80), nullable=False)
-    role = db.Column(db.Integer, default=MEMBER)
-    activation_key = db.Column(db.String(40))
-    date_joined = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime, default=datetime.utcnow)
-    last_request = db.Column(db.DateTime, default=datetime.utcnow)
-    block = db.Column(db.Boolean, default=False)
-
     class Permissions(object):
         
         def __init__(self, obj):
@@ -108,11 +88,15 @@ class User(db.Model):
         def edit(self):
             return Permission(UserNeed(self.obj.id)) & admin
   
-    def __init__(self, *args, **kwargs):
-        super(User, self).__init__(*args, **kwargs)
+    def __init__(self,id=None,email=None,password=None,date_joined=None,last_login=None):
+        self.id = id
+        self.email = email
+        self._password = password
+        self.date_joined = date_joined
+        self.last_login = last_login
 
     def __str__(self):
-        return self.nickname
+        return self.email
     
     def __repr__(self):
         return "<%s>" % self
@@ -159,16 +143,12 @@ class User(db.Model):
 
 
 
-class UserCode(db.Model):
+class UserCode(object):
 
-    __tablename__ = 'usercode'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), nullable=False)
-    role = db.Column(db.Integer, default=User.MEMBER)
-    
-    def __init__(self, *args, **kwargs):
-        super(UserCode, self).__init__(*args, **kwargs)
+    def __init__(self, id=None,code=None,role=User.MEMBER):
+        self.id = id
+        self.code = code
+        self.role = role
 
     def __str__(self):
         return self.code
@@ -176,5 +156,27 @@ class UserCode(db.Model):
     def __repr__(self):
         return "<%s>" % self
 
-
-
+users = Table( 'users',metadata,
+    Column('id', Integer, primary_key=True),
+#    Column('username',String(20),unique=True),
+#    Column('nickname',String(20)),
+    Column('email',String(100),unique=True,nullable=False),
+    Column('_password',String(80),nullable=False),
+#    Column('role',Integer,default=User.MEMBER),
+    Column('activation_key',String(40),),
+    Column('date_joined',DateTime,default=datetime.utcnow),
+    Column('last_login',DateTime,default=datetime.utcnow),
+#    Column('last_request',DateTime,default=datetime.utcnow),
+#    Column('block',Boolean,default=False),
+    # Use AUTOINCREMENT for sqlite3 to yield globally unique ids
+    #   -> new ids cannot take on ids of deleted items, security issue!
+    sqlite_autoincrement=True,
+    )
+mapper(User, users)
+usercodes = Table('usercodes',metadata,
+    Column('id',Integer,primary_key=True),
+    Column('code',String(20),nullable=True),
+    Column('role',Integer,default=User.MEMBER), 
+    sqlite_autoincrement=True,
+    )
+mapper(UserCode, usercodes)
