@@ -92,6 +92,8 @@ def main_table():
 def handle_form():
     action = request.form.get('form_action', 'upload')
     app.logger.debug(action)
+    app.logger.info("action is %s" % action)
+    app.logger.info("request.form is %s" % request.form)
     if action == 'upload':
         return upload_file()
     elif action == 'confirm_deleteall':

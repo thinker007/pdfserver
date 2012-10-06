@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
+encoding//pdfserver/forms.py=utf-8
 encoding//pdfserver/model/__init__.py=utf-8
 encoding//pdfserver/model/users.py=utf-8
 encoding//pdfserver/util.py=utf-8
